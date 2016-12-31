@@ -57,8 +57,6 @@ import net.minecraft.world.gen.structure.StructureOceanMonument;
 import net.minecraft.world.gen.structure.WoodlandMansion;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.event.SpongeEventFactory;
-import org.spongepowered.api.event.cause.Cause;
-import org.spongepowered.api.event.cause.NamedCause;
 import org.spongepowered.api.event.world.chunk.PopulateChunkEvent;
 import org.spongepowered.api.world.biome.BiomeGenerationSettings;
 import org.spongepowered.api.world.biome.BiomeType;
@@ -293,7 +291,6 @@ public class SpongeChunkGenerator implements WorldGenerator, IChunkGenerator {
         world.getTimingsHandler().chunkPopulate.startTimingIfSync();
         this.chunkGeneratorTiming.startTimingIfSync();
         final CauseTracker causeTracker = CauseTracker.getInstance();
-        final Cause populateCause = Cause.of(NamedCause.source(this));
         this.rand.setSeed(this.world.getSeed());
         long i1 = this.rand.nextLong() / 2L * 2L + 1L;
         long j1 = this.rand.nextLong() / 2L * 2L + 1L;
@@ -331,7 +328,7 @@ public class SpongeChunkGenerator implements WorldGenerator, IChunkGenerator {
             populators.add(snowPopulator);
         }
 
-        Sponge.getGame().getEventManager().post(SpongeEventFactory.createPopulateChunkEventPre(populateCause, populators, chunk));
+        Sponge.getGame().getEventManager().post(SpongeEventFactory.createPopulateChunkEventPre(Sponge.getCauseStackManager().getCurrentCause(), populators, chunk));
         List<String> flags = Lists.newArrayList();
         Vector3i min = new Vector3i(chunkX * 16 + 8, 0, chunkZ * 16 + 8);
         org.spongepowered.api.world.World spongeWorld = (org.spongepowered.api.world.World) this.world;
@@ -341,9 +338,10 @@ public class SpongeChunkGenerator implements WorldGenerator, IChunkGenerator {
             if (type == null) {
                 System.err.printf("Found a populator with a null type: %s populator%n", populator);
             }
-            if (Sponge.getGame().getEventManager().post(SpongeEventFactory.createPopulateChunkEventPopulate(populateCause, populator, chunk))) {
+            if (Sponge.getGame().getEventManager().post(SpongeEventFactory.createPopulateChunkEventPopulate(Sponge.getCauseStackManager().getCurrentCause(), populator, chunk))) {
                 continue;
             }
+            Object frame = Sponge.getCauseStackManager().pushCauseFrame();
             Timing timing = null;
             if (Timings.isTimingsEnabled()) {
                 timing = this.populatorTimings.get(populator.getType().getId());
@@ -356,8 +354,8 @@ public class SpongeChunkGenerator implements WorldGenerator, IChunkGenerator {
             }
             if (CauseTracker.ENABLED) {
                 causeTracker.switchToPhase(GenerationPhase.State.POPULATOR_RUNNING, PhaseContext.start()
-                        .add(NamedCause.of(InternalNamedCauses.WorldGeneration.WORLD, world))
-                        .add(NamedCause.of(InternalNamedCauses.WorldGeneration.CAPTURED_POPULATOR, type))
+                        .addExtra(InternalNamedCauses.WorldGeneration.WORLD, world)
+                        .addExtra(InternalNamedCauses.WorldGeneration.CAPTURED_POPULATOR, type)
                         .addEntityCaptures()
                         .complete());
             }
@@ -372,6 +370,7 @@ public class SpongeChunkGenerator implements WorldGenerator, IChunkGenerator {
             if (CauseTracker.ENABLED) {
                 causeTracker.completePhase(GenerationPhase.State.POPULATOR_RUNNING);
             }
+            Sponge.getCauseStackManager().popCauseFrame(frame);
         }
 
         // If we wrapped a custom chunk provider then we should call its
@@ -389,7 +388,7 @@ public class SpongeChunkGenerator implements WorldGenerator, IChunkGenerator {
             }
         }
 
-        PopulateChunkEvent.Post event = SpongeEventFactory.createPopulateChunkEventPost(populateCause, ImmutableList.copyOf(populators), chunk);
+        PopulateChunkEvent.Post event = SpongeEventFactory.createPopulateChunkEventPost(Sponge.getCauseStackManager().getCurrentCause(), ImmutableList.copyOf(populators), chunk);
         SpongeImpl.postEvent(event);
 
         BlockFalling.fallInstantly = false;
@@ -403,11 +402,12 @@ public class SpongeChunkGenerator implements WorldGenerator, IChunkGenerator {
         if (chunk.getInhabitedTime() < 3600L) {
             for (Populator populator : this.pop) {
                 if (populator instanceof StructureOceanMonument) {
+                    Object frame = Sponge.getCauseStackManager().pushCauseFrame();
                     final CauseTracker causeTracker = CauseTracker.getInstance();
                     if (CauseTracker.ENABLED) {
                         causeTracker.switchToPhase(GenerationPhase.State.POPULATOR_RUNNING, PhaseContext.start()
-                                .add(NamedCause.of(InternalNamedCauses.WorldGeneration.WORLD, this.world))
-                                .add(NamedCause.of(InternalNamedCauses.WorldGeneration.CAPTURED_POPULATOR, populator.getType()))
+                                .addExtra(InternalNamedCauses.WorldGeneration.WORLD, this.world)
+                                .addExtra(InternalNamedCauses.WorldGeneration.CAPTURED_POPULATOR, populator.getType())
                                 .addEntityCaptures()
                                 .complete());
                     }
@@ -415,6 +415,7 @@ public class SpongeChunkGenerator implements WorldGenerator, IChunkGenerator {
                     if (CauseTracker.ENABLED) {
                         causeTracker.completePhase(GenerationPhase.State.POPULATOR_RUNNING);
                     }
+                    Sponge.getCauseStackManager().popCauseFrame(frame);
                 }
             }
         }
