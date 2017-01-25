@@ -39,6 +39,7 @@ import net.minecraft.entity.EntityTracker;
 import net.minecraft.entity.EntityTrackerEntry;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.entity.MoverType;
+import net.minecraft.entity.item.EntityArmorStand;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
@@ -74,12 +75,15 @@ import org.spongepowered.api.entity.EntityType;
 import org.spongepowered.api.entity.Transform;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
+import org.spongepowered.api.entity.projectile.Projectile;
+import org.spongepowered.api.entity.projectile.source.ProjectileSource;
 import org.spongepowered.api.event.SpongeEventFactory;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.event.cause.NamedCause;
 import org.spongepowered.api.event.cause.entity.dismount.DismountType;
 import org.spongepowered.api.event.cause.entity.dismount.DismountTypes;
 import org.spongepowered.api.event.entity.MoveEntityEvent;
+import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.service.user.UserStorageService;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.translation.Translation;
@@ -117,6 +121,8 @@ import org.spongepowered.common.event.ShouldFire;
 import org.spongepowered.common.event.SpongeCommonEventFactory;
 import org.spongepowered.common.event.damage.DamageEventHandler;
 import org.spongepowered.common.event.damage.MinecraftBlockDamageSource;
+import org.spongepowered.common.event.tracking.CauseTracker;
+import org.spongepowered.common.event.tracking.PhaseData;
 import org.spongepowered.common.interfaces.block.IMixinBlock;
 import org.spongepowered.common.interfaces.data.IMixinCustomDataHolder;
 import org.spongepowered.common.interfaces.entity.IMixinEntity;
@@ -340,6 +346,33 @@ public abstract class MixinEntity implements IMixinEntity {
         if (this.origWidth == 0 || this.origHeight == 0) {
             this.origWidth = this.width;
             this.origHeight = this.height;
+        }
+    }
+
+    @Inject(method = "setDead", at = @At("HEAD"))
+    public void onSetDead(CallbackInfo ci) {
+        net.minecraft.entity.Entity mcEntity = (net.minecraft.entity.Entity) (Object) this;
+        if (!this.world.isRemote && (!(mcEntity instanceof EntityLivingBase) || (mcEntity instanceof EntityArmorStand))) {
+            IMixinWorldServer spongeWorld = (IMixinWorldServer) this.world;
+            final CauseTracker causeTracker = spongeWorld.getCauseTracker();
+
+            PhaseData phaseData = causeTracker.getCurrentPhaseData();
+
+            Cause.Builder causeBuilder = Cause.builder();
+            Optional<Object> sourceOptional = phaseData.context.getSource(Object.class);
+            sourceOptional.ifPresent(source -> {
+                causeBuilder.named(NamedCause.source(source));
+                if (source instanceof Projectile) {
+                    ProjectileSource projectileSource = ((Projectile) source).getShooter();
+                    causeBuilder.named(NamedCause.of(NamedCause.THROWER, projectileSource));
+                }
+            });
+            Optional<ItemStack> usedItemOptional = phaseData.context.firstNamed("ItemUsed", ItemStack.class);
+            usedItemOptional.ifPresent(item -> causeBuilder.named(NamedCause.of("ItemUsed", item)));
+
+            phaseData.context.getOwner().ifPresent(owner -> causeBuilder.named(NamedCause.owner(owner)));
+
+            destructCause = causeBuilder.build();
         }
     }
 

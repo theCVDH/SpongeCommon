@@ -474,18 +474,12 @@ public class SpongeCommonEventFactory {
         return event;
     }
 
-    public static boolean callDestructEntityEvent(Entity entity, Cause cause) {
+    public static boolean callDestructEntityEvent(Entity entity, @Nullable Cause cause) {
         if (((net.minecraft.entity.Entity) entity).isDead && (!(entity instanceof EntityLivingBase) || entity instanceof EntityArmorStand)) {
             MessageChannel originalChannel = MessageChannel.TO_NONE;
-            Optional<User> sourceCreator = Optional.empty();
-
-            List<NamedCause> causes = new ArrayList<>();
-            sourceCreator.ifPresent(user -> causes.add(NamedCause.owner(user)));
-
             if (cause == null) {
                 cause = Cause.of(NamedCause.source(entity.getWorld()));
             }
-            cause = cause.with(causes);
             DestructEntityEvent event = SpongeEventFactory.createDestructEntityEvent(
                     cause, originalChannel, Optional.of(originalChannel), new MessageEvent.MessageFormatter(),
                     entity, true
