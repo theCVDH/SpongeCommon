@@ -34,6 +34,7 @@ import net.minecraft.block.BlockDirectional;
 import net.minecraft.block.state.BlockPistonStructureHelper;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.item.EntityArmorStand;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.passive.EntityHorse;
 import net.minecraft.entity.player.EntityPlayer;
@@ -471,6 +472,31 @@ public class SpongeCommonEventFactory {
         }
         SpongeImpl.postEvent(event);
         return event;
+    }
+
+    public static boolean callDestructEntityEvent(Entity entity, Cause cause) {
+        if (((net.minecraft.entity.Entity) entity).isDead && (!(entity instanceof EntityLivingBase) || entity instanceof EntityArmorStand)) {
+            MessageChannel originalChannel = MessageChannel.TO_NONE;
+            Optional<User> sourceCreator = Optional.empty();
+
+            List<NamedCause> causes = new ArrayList<>();
+            sourceCreator.ifPresent(user -> causes.add(NamedCause.owner(user)));
+
+            if (cause == null) {
+                cause = Cause.of(NamedCause.source(entity.getWorld()));
+            }
+            cause = cause.with(causes);
+            DestructEntityEvent event = SpongeEventFactory.createDestructEntityEvent(
+                    cause, originalChannel, Optional.of(originalChannel), new MessageEvent.MessageFormatter(),
+                    entity, true
+            );
+            SpongeImpl.getGame().getEventManager().post(event);
+            if (!event.isMessageCancelled()) {
+                event.getChannel().ifPresent(channel -> channel.send(entity, event.getMessage()));
+            }
+        }
+
+        return true;
     }
 
     public static boolean callDestructEntityEventDeath(EntityLivingBase entity, DamageSource source) {

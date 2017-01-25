@@ -723,6 +723,16 @@ public abstract class MixinEntity implements IMixinEntity {
     }
 
     @Override
+    public Cause getDestructCause() {
+        return this.destructCause;
+    }
+
+    @Override
+    public void setDestructCause(Cause destructCause) {
+        this.destructCause = destructCause;
+    }
+
+    @Override
     public boolean isLoaded() {
         // TODO - add flag for entities loaded/unloaded into world
         return !isRemoved();

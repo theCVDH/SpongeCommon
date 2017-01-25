@@ -39,6 +39,8 @@ import net.minecraft.crash.CrashReport;
 import net.minecraft.crash.CrashReportCategory;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.MultiPartEntityPart;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.boss.EntityDragonPart;
 import net.minecraft.entity.effect.EntityLightningBolt;
 import net.minecraft.entity.item.EntityArmorStand;
 import net.minecraft.entity.item.EntityEnderPearl;
@@ -127,6 +129,7 @@ import org.spongepowered.common.block.BlockUtil;
 import org.spongepowered.common.block.SpongeBlockSnapshotBuilder;
 import org.spongepowered.common.data.type.SpongeTileEntityType;
 import org.spongepowered.common.entity.EntityUtil;
+import org.spongepowered.common.event.SpongeCommonEventFactory;
 import org.spongepowered.common.interfaces.IMixinChunk;
 import org.spongepowered.common.interfaces.data.IMixinCustomDataHolder;
 import org.spongepowered.common.interfaces.entity.IMixinEntity;
@@ -517,6 +520,13 @@ public abstract class MixinWorld implements World, IMixinWorld {
     public Optional<Entity> createEntity(DataContainer entityContainer, Vector3d position) {
         // TODO once entity containers are implemented
         return Optional.empty();
+    }
+
+    @Inject(method = "onEntityRemoved", at = @At(value = "HEAD"))
+    public void onEntityRemoval(net.minecraft.entity.Entity entityIn, CallbackInfo ci) {
+        if (!this.isRemote && (!(entityIn instanceof EntityLivingBase) || entityIn instanceof EntityArmorStand)) {
+            SpongeCommonEventFactory.callDestructEntityEvent((Entity) entityIn, ((IMixinEntity) entityIn).getDestructCause());
+        }
     }
 
     @Override
