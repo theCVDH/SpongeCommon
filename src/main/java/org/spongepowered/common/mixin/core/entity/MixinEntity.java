@@ -372,7 +372,7 @@ public abstract class MixinEntity implements IMixinEntity {
 
             phaseData.context.getOwner().ifPresent(owner -> causeBuilder.named(NamedCause.owner(owner)));
 
-            destructCause = causeBuilder.build();
+            this.destructCause = causeBuilder.build();
         }
     }
 
