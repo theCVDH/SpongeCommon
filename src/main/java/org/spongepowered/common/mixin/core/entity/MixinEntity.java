@@ -117,6 +117,7 @@ import org.spongepowered.common.entity.EntityUtil;
 import org.spongepowered.common.entity.SpongeEntityArchetypeBuilder;
 import org.spongepowered.common.entity.SpongeEntitySnapshotBuilder;
 import org.spongepowered.common.entity.SpongeEntityType;
+import org.spongepowered.common.event.InternalNamedCauses;
 import org.spongepowered.common.event.ShouldFire;
 import org.spongepowered.common.event.SpongeCommonEventFactory;
 import org.spongepowered.common.event.damage.DamageEventHandler;
@@ -367,8 +368,8 @@ public abstract class MixinEntity implements IMixinEntity {
                     causeBuilder.named(NamedCause.of(NamedCause.THROWER, projectileSource));
                 }
             });
-            Optional<ItemStack> usedItemOptional = phaseData.context.firstNamed("ItemUsed", ItemStack.class);
-            usedItemOptional.ifPresent(item -> causeBuilder.named(NamedCause.of("ItemUsed", item)));
+            Optional<ItemStack> usedItemOptional = phaseData.context.firstNamed(InternalNamedCauses.Packet.ITEM_USED, ItemStack.class);
+            usedItemOptional.ifPresent(item -> causeBuilder.named(NamedCause.of(InternalNamedCauses.Packet.ITEM_USED, item)));
 
             phaseData.context.getOwner().ifPresent(owner -> causeBuilder.named(NamedCause.owner(owner)));
 
@@ -756,6 +757,7 @@ public abstract class MixinEntity implements IMixinEntity {
     }
 
     @Override
+    @Nullable
     public Cause getDestructCause() {
         return this.destructCause;
     }
