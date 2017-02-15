@@ -90,7 +90,7 @@ import org.spongepowered.api.entity.EntityType;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.projectile.EnderPearl;
 import org.spongepowered.api.entity.projectile.source.ProjectileSource;
-import org.spongepowered.api.service.context.ServiceContext;
+import org.spongepowered.api.service.context.Context;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.chat.ChatType;
 import org.spongepowered.api.text.title.Title;
@@ -176,7 +176,7 @@ public abstract class MixinWorld implements World, IMixinWorld {
             "Lnet/minecraft/world/World;getEntitiesWithinAABBExcludingEntity(Lnet/minecraft/entity/Entity;Lnet/minecraft/util/math/AxisAlignedBB;)Ljava/util/List;";
     public SpongeBlockSnapshotBuilder builder = new SpongeBlockSnapshotBuilder();
 
-    @Nullable private ServiceContext worldContext;
+    @Nullable private Context worldContext;
     protected boolean processingExplosion = false;
 
     // @formatter:off
@@ -574,7 +574,7 @@ public abstract class MixinWorld implements World, IMixinWorld {
     }
 
     @Override
-    public ServiceContext getContext() {
+    public Context getContext() {
         if (this.worldContext == null) {
             WorldInfo worldInfo = getWorldInfo();
             if (worldInfo == null) {
@@ -582,7 +582,7 @@ public abstract class MixinWorld implements World, IMixinWorld {
                 // override getWorldInfo with a null, or submit a null value.
                 worldInfo = new WorldInfo(new WorldSettings(0, GameType.NOT_SET, false, false, WorldType.DEFAULT), "sponge$dummy_World");
             }
-            this.worldContext = new ServiceContext(ServiceContext.WORLD_KEY, worldInfo.getWorldName());
+            this.worldContext = new Context(Context.WORLD_KEY, worldInfo.getWorldName());
         }
         return this.worldContext;
     }

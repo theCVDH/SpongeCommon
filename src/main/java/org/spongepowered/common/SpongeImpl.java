@@ -209,7 +209,6 @@ public final class SpongeImpl {
         postState(GameState.GAME_STOPPING, SpongeEventFactory.createGameStoppingEvent(Cause.source(game).build()));
         postState(GameState.GAME_STOPPED, SpongeEventFactory.createGameStoppedEvent(Cause.source(game).build()));
     }
-<<<<<<< beb6bca99e4f52290dfc07c01995ef25ba129042
 
     // TODO this code is used a BUNCH of times
     /**
@@ -229,6 +228,4 @@ public final class SpongeImpl {
 
         return containerOptional.get();
     }
-=======
->>>>>>> Implement cause and context refactor
 }
