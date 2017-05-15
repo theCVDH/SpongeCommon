@@ -1591,9 +1591,9 @@ public abstract class MixinWorldServer extends MixinWorld implements IMixinWorld
                     .addEntityDropCaptures()
                     .addBlockCaptures();
             if (entityIn != null) {
-                phaseContext.add(NamedCause.source(entityIn));
+                phaseContext.source(entityIn);
             } else {
-                phaseContext.add(NamedCause.source(this));
+                phaseContext.source(this);
             }
             final PhaseData currentPhaseData = CauseTracker.getInstance().getCurrentPhaseData();
             currentPhaseData.state.getPhase().appendContextPreExplosion(phaseContext, currentPhaseData);
