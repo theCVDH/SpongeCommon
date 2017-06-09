@@ -44,6 +44,7 @@ import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.util.Booleans;
+import org.spongepowered.api.Sponge;
 import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.event.SpongeEventFactory;
@@ -109,7 +110,6 @@ public final class CauseTracker {
     public final boolean isVerbose = SpongeImpl.getGlobalConfig().getConfig().getCauseTracker().isVerbose();
     public final boolean verboseErrors = SpongeImpl.getGlobalConfig().getConfig().getCauseTracker().verboseErrors();
 
-    @SuppressWarnings("ConstantConditions")
     private CauseTracker() {
         // We cannot have two instances ever. ever ever.
         checkState(INSTANCE == null, "More than one CauseTracker instance is being created!!! Two cannot exist at once!");
@@ -600,75 +600,74 @@ public final class CauseTracker {
 
         if (!isForced && !mixinWorldServer.isMinecraftChunkLoaded(chunkX, chunkZ, true)) {
             return false;
-        } else {
-            if (minecraftEntity instanceof EntityPlayer) {
-                EntityPlayer entityplayer = (EntityPlayer) minecraftEntity;
-                minecraftWorld.playerEntities.add(entityplayer);
-                minecraftWorld.updateAllPlayersSleepingFlag();
-                SpongeImplHooks.firePlayerJoinSpawnEvent((EntityPlayerMP) entityplayer);
-            } else {
-                // Sponge start - check for vanilla owner
-                if (minecraftEntity instanceof EntityTameable) {
-                    EntityTameable tameable = (EntityTameable) entity;
-                    EntityLivingBase owner = tameable.getOwner();
-                    if (owner != null) {
-                        User user = null;
-                        if (!(owner instanceof EntityPlayer)) {
-                            user = ((IMixinEntity) owner).getCreatorUser().orElse(null);
-                        } else {
-                           user = (User) owner;
-                        }
-                        if (user != null) {
-                            context.owner = user;
-                            entity.setCreator(user.getUniqueId());
-                        }
-                    }
-                } else if (minecraftEntity instanceof EntityThrowable) {
-                    EntityThrowable throwable = (EntityThrowable) minecraftEntity;
-                    EntityLivingBase thrower = throwable.getThrower();
-                    if (thrower != null) {
-                        User user = null;
-                        if (!(thrower instanceof EntityPlayer)) {
-                            user = ((IMixinEntity) thrower).getCreatorUser().orElse(null);
-                        } else {
-                            user = (User) thrower;
-                        }
-                        if (user != null) {
-                            context.owner = user;
-                            entity.setCreator(user.getUniqueId());
-                        }
-                    }
-                }
-                // Sponge end
-            }
-            // Sponge Start
-            // First, check if the owning world is a remote world. Then check if the spawn is forced.
-            // Finally, if all checks are true, then let the phase process the entity spawn. Most phases
-            // will not actively capture entity spawns, but will still throw events for them. Some phases
-            // capture all entities until the phase is marked for completion.
-            if (!isForced) {
-                try {
-                    return phase.spawnEntityOrCapture(phaseState, context, entity, chunkX, chunkZ);
-                } catch (Exception | NoClassDefFoundError e) {
-                    // Just in case something really happened, we should print a nice exception for people to
-                    // paste us
-                    final PrettyPrinter printer = new PrettyPrinter(60).add("Exception attempting to capture or spawn an Entity!").centre().hr();
-                    printer.addWrapped(40, "%s :", "PhaseContext");
-                    CONTEXT_PRINTER.accept(printer, context);
-                    printer.addWrapped(60, "%s :", "Phases remaining");
-                    this.stack.forEach(data -> PHASE_PRINTER.accept(printer, data));
-                    printer.add("Stacktrace:");
-                    printer.add(e);
-                    printer.trace(System.err, SpongeImpl.getLogger(), Level.ERROR);
-                    return false;
-                }
-            }
-            // Sponge end - continue on with the checks.
-            minecraftWorld.getChunkFromChunkCoords(chunkX, chunkZ).addEntity(minecraftEntity);
-            minecraftWorld.loadedEntityList.add(minecraftEntity);
-            mixinWorldServer.onSpongeEntityAdded(minecraftEntity); // Sponge - Cannot add onEntityAdded to the access transformer because forge makes it public
-            return true;
         }
+        if (minecraftEntity instanceof EntityPlayer) {
+            EntityPlayer entityplayer = (EntityPlayer) minecraftEntity;
+            minecraftWorld.playerEntities.add(entityplayer);
+            minecraftWorld.updateAllPlayersSleepingFlag();
+            SpongeImplHooks.firePlayerJoinSpawnEvent((EntityPlayerMP) entityplayer);
+        } else {
+            // Sponge start - check for vanilla owner
+            if (minecraftEntity instanceof EntityTameable) {
+                EntityTameable tameable = (EntityTameable) entity;
+                EntityLivingBase owner = tameable.getOwner();
+                if (owner != null) {
+                    User user = null;
+                    if (!(owner instanceof EntityPlayer)) {
+                        user = ((IMixinEntity) owner).getCreatorUser().orElse(null);
+                    } else {
+                       user = (User) owner;
+                    }
+                    if (user != null) {
+                        context.owner = user;
+                        entity.setCreator(user.getUniqueId());
+                    }
+                }
+            } else if (minecraftEntity instanceof EntityThrowable) {
+                EntityThrowable throwable = (EntityThrowable) minecraftEntity;
+                EntityLivingBase thrower = throwable.getThrower();
+                if (thrower != null) {
+                    User user = null;
+                    if (!(thrower instanceof EntityPlayer)) {
+                        user = ((IMixinEntity) thrower).getCreatorUser().orElse(null);
+                    } else {
+                        user = (User) thrower;
+                    }
+                    if (user != null) {
+                        context.owner = user;
+                        entity.setCreator(user.getUniqueId());
+                    }
+                }
+            }
+            // Sponge end
+        }
+        // Sponge Start
+        // First, check if the owning world is a remote world. Then check if the spawn is forced.
+        // Finally, if all checks are true, then let the phase process the entity spawn. Most phases
+        // will not actively capture entity spawns, but will still throw events for them. Some phases
+        // capture all entities until the phase is marked for completion.
+        if (!isForced) {
+            try {
+                return phase.spawnEntityOrCapture(phaseState, context, entity, chunkX, chunkZ);
+            } catch (Exception | NoClassDefFoundError e) {
+                // Just in case something really happened, we should print a nice exception for people to
+                // paste us
+                final PrettyPrinter printer = new PrettyPrinter(60).add("Exception attempting to capture or spawn an Entity!").centre().hr();
+                printer.addWrapped(40, "%s :", "PhaseContext");
+                CONTEXT_PRINTER.accept(printer, context);
+                printer.addWrapped(60, "%s :", "Phases remaining");
+                this.stack.forEach(data -> PHASE_PRINTER.accept(printer, data));
+                printer.add("Stacktrace:");
+                printer.add(e);
+                printer.trace(System.err, SpongeImpl.getLogger(), Level.ERROR);
+                return false;
+            }
+        }
+        // Sponge end - continue on with the checks.
+        minecraftWorld.getChunkFromChunkCoords(chunkX, chunkZ).addEntity(minecraftEntity);
+        minecraftWorld.loadedEntityList.add(minecraftEntity);
+        mixinWorldServer.onSpongeEntityAdded(minecraftEntity); // Sponge - Cannot add onEntityAdded to the access transformer because forge makes it public
+        return true;
     }
 
     /**
