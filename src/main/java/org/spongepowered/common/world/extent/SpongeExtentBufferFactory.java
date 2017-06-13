@@ -30,7 +30,6 @@ import org.spongepowered.api.world.extent.ArchetypeVolume;
 import org.spongepowered.api.world.extent.ExtentBufferFactory;
 import org.spongepowered.api.world.extent.MutableBiomeVolume;
 import org.spongepowered.api.world.extent.MutableBlockVolume;
-import org.spongepowered.api.world.schematic.BlockPaletteTypes;
 import org.spongepowered.common.util.gen.ArrayMutableBlockBuffer;
 import org.spongepowered.common.util.gen.ByteArrayMutableBiomeBuffer;
 import org.spongepowered.common.world.schematic.SpongeArchetypeVolume;
@@ -43,22 +42,22 @@ public final class SpongeExtentBufferFactory implements ExtentBufferFactory {
     }
 
     @Override
-    public MutableBiomeVolume createBiomeBuffer(Vector3i size) {
-        return new ByteArrayMutableBiomeBuffer(Vector3i.ZERO, size);
+    public MutableBiomeVolume createBiomeBuffer(Vector3i min, Vector3i size) {
+        return new ByteArrayMutableBiomeBuffer(min, size);
     }
 
     @Override
-    public MutableBiomeVolume createThreadSafeBiomeBuffer(Vector3i size) {
+    public MutableBiomeVolume createThreadSafeBiomeBuffer(Vector3i min, Vector3i size) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public MutableBlockVolume createBlockBuffer(Vector3i size) {
-        return new ArrayMutableBlockBuffer(Vector3i.ZERO, size);
+    public MutableBlockVolume createBlockBuffer(Vector3i min, Vector3i size) {
+        return new ArrayMutableBlockBuffer(min, size);
     }
 
     @Override
-    public MutableBlockVolume createThreadSafeBlockBuffer(Vector3i size) {
+    public MutableBlockVolume createThreadSafeBlockBuffer(Vector3i min, Vector3i size) {
         throw new UnsupportedOperationException();
     }
 
