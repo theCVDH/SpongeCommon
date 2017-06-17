@@ -32,12 +32,14 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntityFurnace;
 import org.spongepowered.api.block.tileentity.carrier.Furnace;
 import org.spongepowered.api.data.DataContainer;
+import org.spongepowered.api.item.ItemTypes;
 import org.spongepowered.api.util.annotation.NonnullByDefault;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.common.interfaces.data.IMixinCustomNameable;
 import org.spongepowered.common.item.inventory.adapter.InventoryAdapter;
 import org.spongepowered.common.item.inventory.adapter.impl.slots.FuelSlotAdapter;
@@ -46,6 +48,7 @@ import org.spongepowered.common.item.inventory.lens.impl.collections.SlotCollect
 import org.spongepowered.common.item.inventory.lens.impl.minecraft.FurnaceInventoryLens;
 import org.spongepowered.common.item.inventory.lens.impl.slots.FuelSlotLensImpl;
 import org.spongepowered.common.item.inventory.lens.impl.slots.OutputSlotLensImpl;
+import org.spongepowered.common.item.inventory.util.ItemStackUtil;
 
 @NonnullByDefault
 @Mixin(TileEntityFurnace.class)
@@ -85,4 +88,12 @@ public abstract class MixinTileEntityFurnace extends MixinTileEntityLockable imp
         ((TileEntityFurnace) (Object) this).setCustomInventoryName(customName);
     }
 
+    @Inject(cancellable = true, method = "getItemBurnTime", at = @At("RETURN"))
+    private static void getItemBurnTime(ItemStack stack, CallbackInfoReturnable<Integer> callbackInfo) {
+        if (callbackInfo.getReturnValue() == 0) {
+            if (ItemStackUtil.fromNative(stack).getItem() == ItemTypes.OBSIDIAN) {
+                callbackInfo.setReturnValue(10);
+            }
+        }
+    }
 }
