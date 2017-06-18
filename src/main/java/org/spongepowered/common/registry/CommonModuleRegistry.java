@@ -36,6 +36,13 @@ import org.spongepowered.api.block.trait.IntegerTrait;
 import org.spongepowered.api.boss.BossBarColor;
 import org.spongepowered.api.boss.BossBarOverlay;
 import org.spongepowered.api.boss.ServerBossBar;
+import org.spongepowered.api.command.parameters.Parameter;
+import org.spongepowered.api.command.parameters.flags.Flags;
+import org.spongepowered.api.command.parameters.flags.UnknownFlagBehavior;
+import org.spongepowered.api.command.parameters.specification.CatalogedValueParameter;
+import org.spongepowered.api.command.parameters.specification.CatalogedValueParameterModifier;
+import org.spongepowered.api.command.parameters.tokens.InputTokenizer;
+import org.spongepowered.api.command.specification.ChildExceptionBehavior;
 import org.spongepowered.api.data.DataRegistration;
 import org.spongepowered.api.data.key.Key;
 import org.spongepowered.api.data.meta.PatternLayer;
@@ -139,6 +146,9 @@ import org.spongepowered.common.block.SpongeBlockSnapshotBuilder;
 import org.spongepowered.common.block.SpongeBlockStateBuilder;
 import org.spongepowered.common.block.SpongeTileEntityArchetypeBuilder;
 import org.spongepowered.common.boss.ServerBossBarBuilder;
+import org.spongepowered.common.command.parameters.SpongeParameterBuilder;
+import org.spongepowered.common.command.parameters.SpongeParameterSequenceBuilder;
+import org.spongepowered.common.command.parameters.flags.SpongeFlagsBuilder;
 import org.spongepowered.common.data.SpongeDataRegistrationBuilder;
 import org.spongepowered.common.data.builder.data.meta.SpongePatternLayerBuilder;
 import org.spongepowered.common.effect.particle.SpongeParticleEffectBuilder;
@@ -174,6 +184,11 @@ import org.spongepowered.common.registry.type.*;
 import org.spongepowered.common.registry.type.block.*;
 import org.spongepowered.common.registry.type.boss.BossBarColorRegistryModule;
 import org.spongepowered.common.registry.type.boss.BossBarOverlayRegistryModule;
+import org.spongepowered.common.registry.type.command.CatalogedValueParameterModifiersRegistryModule;
+import org.spongepowered.common.registry.type.command.CatalogedValueParametersRegistryModule;
+import org.spongepowered.common.registry.type.command.ChildExceptionBehaviorRegistryModule;
+import org.spongepowered.common.registry.type.command.InputTokenizerRegistryModule;
+import org.spongepowered.common.registry.type.command.UnknownFlagBehaviorRegistryModule;
 import org.spongepowered.common.registry.type.data.DataFormatRegistryModule;
 import org.spongepowered.common.registry.type.data.DataTranslatorRegistryModule;
 import org.spongepowered.common.registry.type.data.HandTypeRegistryModule;
@@ -344,6 +359,9 @@ public final class CommonModuleRegistry {
             .registerBuilderSupplier(ShapedCraftingRecipe.Builder.class, SpongeShapedCraftingRecipeBuilder::new)
             .registerBuilderSupplier(ShapelessCraftingRecipe.Builder.class, SpongeShapelessCraftingRecipeBuilder::new)
             .registerBuilderSupplier(SmeltingRecipe.Builder.class, SpongeSmeltingRecipeBuilder::new)
+            .registerBuilderSupplier(Parameter.Builder.class, SpongeParameterBuilder::new)
+            .registerBuilderSupplier(Parameter.SequenceBuilder.class, SpongeParameterSequenceBuilder::new)
+            .registerBuilderSupplier(Flags.Builder.class, SpongeFlagsBuilder::new)
         ;
     }
 
@@ -364,7 +382,10 @@ public final class CommonModuleRegistry {
             .registerModule(BlockType.class, BlockTypeRegistryModule.getInstance())
             .registerModule(BrickType.class, new BrickTypeRegistryModule())
             .registerModule(Career.class, CareerRegistryModule.getInstance())
+            .registerModule(CatalogedValueParameterModifier.class, new CatalogedValueParameterModifiersRegistryModule())
+            .registerModule(CatalogedValueParameter.class, new CatalogedValueParametersRegistryModule())
             .registerModule(new ChatTypeRegistryModule())
+            .registerModule(ChildExceptionBehavior.class, new ChildExceptionBehaviorRegistryModule())
             .registerModule(CoalType.class, new CoalTypeRegistryModule())
             .registerModule(ComparatorType.class, new ComparatorTypeRegistryModule())
             .registerModule(CookedFish.class, new CookedFishRegistryModule())
@@ -393,6 +414,7 @@ public final class CommonModuleRegistry {
             .registerModule(GoalType.class, GoalTypeModule.getInstance())
             .registerModule(GoldenApple.class, new GoldenAppleRegistryModule())
             .registerModule(Hinge.class, new HingeRegistryModule())
+            .registerModule(InputTokenizer.class, new InputTokenizerRegistryModule())
             .registerModule(IntegerTrait.class, IntegerTraitRegistryModule.getInstance())
             .registerModule(ItemType.class, ItemTypeRegistryModule.getInstance())
             .registerModule(new LocaleRegistryModule())
@@ -437,6 +459,7 @@ public final class CommonModuleRegistry {
             .registerModule(Visibility.class, new VisibilityRegistryModule())
             .registerModule(Statistic.class, StatisticRegistryModule.getInstance())
             .registerModule(StatisticType.class, new StatisticTypeRegistryModule())
+            .registerModule(UnknownFlagBehavior.class, new UnknownFlagBehaviorRegistryModule())
             .registerModule(WallType.class, new WallTypeRegistryModule())
             .registerModule(Weather.class, new WeatherRegistryModule())
             .registerModule(WorldGeneratorModifier.class, WorldGeneratorModifierRegistryModule.getInstance())
