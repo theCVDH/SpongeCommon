@@ -84,6 +84,8 @@ public class SpongeUser implements ArmorEquipable, Tamer, DataSerializable, Carr
 
     private final Map<UUID, RespawnLocation> spawnLocations = Maps.newHashMap();
 
+    private SpongeUserInventory inventory;
+
     public SpongeUser(GameProfile profile) {
         this.profile = profile;
     }
@@ -95,6 +97,10 @@ public class SpongeUser implements ArmorEquipable, Tamer, DataSerializable, Carr
     public void readFromNbt(NBTTagCompound compound) {
         this.reset();
         // See EntityPlayer#readEntityFromNBT
+
+        NBTTagList nbttaglist = compound.getTagList("Inventory", 10);
+        this.inventory.readFromNBT(nbttaglist);
+
         final NBTTagCompound spongeCompound = compound.getCompoundTag(NbtDataUtil.FORGE_DATA).getCompoundTag(NbtDataUtil.SPONGE_DATA);
         CustomDataNbtUtil.readCustomData(spongeCompound, ((DataHolder) this));
         if (!spongeCompound.hasNoTags()) {
@@ -125,6 +131,8 @@ public class SpongeUser implements ArmorEquipable, Tamer, DataSerializable, Carr
     }
 
     public void writeToNbt(NBTTagCompound compound) {
+
+        compound.setTag("Inventory", this.inventory.writeToNBT(new NBTTagList()));
 
         final NBTTagCompound forgeCompound = compound.getCompoundTag(NbtDataUtil.FORGE_DATA);
         final NBTTagCompound spongeCompound = forgeCompound.getCompoundTag(NbtDataUtil.SPONGE_DATA);
