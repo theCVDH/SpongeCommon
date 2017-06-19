@@ -354,8 +354,7 @@ public abstract class MixinEntity implements IMixinEntity {
     public void onSetDead(CallbackInfo ci) {
         net.minecraft.entity.Entity mcEntity = (net.minecraft.entity.Entity) (Object) this;
         if (!this.world.isRemote && (!(mcEntity instanceof EntityLivingBase) || (mcEntity instanceof EntityArmorStand))) {
-            IMixinWorldServer spongeWorld = (IMixinWorldServer) this.world;
-            final CauseTracker causeTracker = spongeWorld.getCauseTracker();
+            final CauseTracker causeTracker = CauseTracker.getInstance();
 
             PhaseData phaseData = causeTracker.getCurrentPhaseData();
 
