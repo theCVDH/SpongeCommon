@@ -24,6 +24,7 @@
  */
 package org.spongepowered.common.command.parameters.flags;
 
+import org.spongepowered.api.command.CommandMessageFormatting;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.command.parameters.CommandExecutionContext;
@@ -31,24 +32,24 @@ import org.spongepowered.api.command.parameters.Parameter;
 import org.spongepowered.api.command.parameters.flags.Flags;
 import org.spongepowered.api.command.parameters.flags.UnknownFlagBehavior;
 import org.spongepowered.api.command.parameters.tokens.TokenizedArgs;
+import org.spongepowered.common.util.TextsJoiningCollector;
 
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class SpongeFlags implements Flags {
 
-    private final Map<String, String> flagAliasToFlag;
-    private final Map<String, Parameter> valueFlags;
-    private final Map<String, String> permissionFlags;
+    private final List<String> primaryFlags;
+    private final Map<String, Parameter> flags;
     private final UnknownFlagBehavior shortUnknown;
     private final UnknownFlagBehavior longUnknown;
     private final boolean anchorFlags;
 
-    SpongeFlags(Map<String, String> flagAliasToFlag,
-            Map<String, Parameter> valueFlags, Map<String, String> permissionFlags,
+    SpongeFlags(List<String> primaryFlags, Map<String, Parameter> flags,
             UnknownFlagBehavior shortUnknown, UnknownFlagBehavior longUnknown, boolean anchorFlags) {
-        this.flagAliasToFlag = flagAliasToFlag;
-        this.valueFlags = valueFlags;
-        this.permissionFlags = permissionFlags;
+        this.primaryFlags = primaryFlags;
+        this.flags = flags;
         this.shortUnknown = shortUnknown;
         this.longUnknown = longUnknown;
         this.anchorFlags = anchorFlags;
@@ -61,6 +62,14 @@ public class SpongeFlags implements Flags {
 
     @Override
     public Text getUsage(CommandSource src) {
-        return null;
+        return this.primaryFlags.stream().map(this.flags::get).map(x -> x.getUsage(src)).filter(x -> !x.isEmpty())
+                .collect(new TextsJoiningCollector(CommandMessageFormatting.SPACE_TEXT));
+    }
+
+    void populateBuilder(SpongeFlagsBuilder builder) {
+        builder.updateFlags(this.primaryFlags, this.flags)
+                .setUnknownShortFlagBehavior(this.shortUnknown)
+                .setUnknownLongFlagBehavior(this.longUnknown)
+                .setAnchorFlags(this.anchorFlags);
     }
 }
