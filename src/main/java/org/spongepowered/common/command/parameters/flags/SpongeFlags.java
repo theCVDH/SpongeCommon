@@ -26,6 +26,7 @@ package org.spongepowered.common.command.parameters.flags;
 
 import org.spongepowered.api.command.CommandMessageFormatting;
 import org.spongepowered.api.command.CommandSource;
+import org.spongepowered.api.command.parameters.ParameterParseException;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.command.parameters.CommandExecutionContext;
 import org.spongepowered.api.command.parameters.Parameter;
@@ -35,6 +36,7 @@ import org.spongepowered.api.command.parameters.tokens.TokenizedArgs;
 import org.spongepowered.common.util.TextsJoiningCollector;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -56,8 +58,42 @@ public class SpongeFlags implements Flags {
     }
 
     @Override
-    public void parse(CommandSource source, TokenizedArgs args, CommandExecutionContext context) {
+    public void parse(CommandSource source, TokenizedArgs args, CommandExecutionContext context) throws ParameterParseException {
+        if (args.hasPrevious() && !this.anchorFlags || !args.hasNext() || !args.peek().startsWith("-")) {
+            return; // Nothing to parse, move along.
+        }
 
+        // Avoiding PPE
+        Object tokenizedPreviousState = args.getState();
+        Object contextPreviousState = args.getState();
+        String next = args.next();
+        if (next.startsWith("--")) {
+            parseLong(next, source, args, context, tokenizedPreviousState, contextPreviousState);
+        } else {
+            parseShort(next, source, args, context, tokenizedPreviousState, contextPreviousState);
+        }
+    }
+
+    private void parseShort(String flag, CommandSource source, TokenizedArgs args, CommandExecutionContext context, Object tokenizedPreviousState,
+            Object contextPreviousState) throws ParameterParseException {
+        String shortFlag = flag.substring(1, 2).toLowerCase(Locale.ENGLISH);
+        Parameter param = this.flags.get(shortFlag);
+        if (param == null) {
+            this.shortUnknown.parse(source, args, context, tokenizedPreviousState, contextPreviousState);
+        } else {
+            param.parse(source, args, context);
+        }
+    }
+
+    private void parseLong(String flag, CommandSource source, TokenizedArgs args, CommandExecutionContext context, Object tokenizedPreviousState,
+            Object contextPreviousState) throws ParameterParseException {
+        String longFlag = flag.substring(2).toLowerCase(Locale.ENGLISH);
+        Parameter param = this.flags.get(longFlag);
+        if (param == null) {
+            this.longUnknown.parse(source, args, context, tokenizedPreviousState, contextPreviousState);
+        } else {
+            param.parse(source, args, context);
+        }
     }
 
     @Override
