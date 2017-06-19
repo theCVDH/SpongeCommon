@@ -24,13 +24,23 @@
  */
 package org.spongepowered.common.command.specification;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+import static org.spongepowered.api.util.SpongeApiTranslationHelper.t;
+
+import com.google.common.collect.ImmutableList;
 import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.CommandException;
+import org.spongepowered.api.command.CommandMessageFormatting;
 import org.spongepowered.api.command.CommandPermissionException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
+import org.spongepowered.api.command.args.CommandArgs;
+import org.spongepowered.api.command.args.CommandContext;
+import org.spongepowered.api.command.parameters.CommandExecutionContext;
+import org.spongepowered.api.command.parameters.ParameterParseException;
 import org.spongepowered.api.command.parameters.tokens.InputTokenizer;
 import org.spongepowered.api.command.specification.ChildExceptionBehavior;
+import org.spongepowered.api.command.specification.CommandExecutor;
 import org.spongepowered.api.command.specification.CommandSpecification;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.world.Location;
@@ -38,40 +48,43 @@ import org.spongepowered.api.world.World;
 import org.spongepowered.api.command.parameters.Parameter;
 import org.spongepowered.api.command.parameters.flags.Flags;
 import org.spongepowered.api.command.parameters.tokens.TokenizedArgs;
-import org.spongepowered.common.command.specification.SpongeCommandExecutionContext;
+import org.spongepowered.common.command.parameters.flags.NoFlags;
 import org.spongepowered.common.command.parameters.tokenized.SpongeTokenizedArgs;
 
 import javax.annotation.Nullable;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 public class SpongeCommandSpecification implements CommandSpecification {
 
-    private final Iterable<Parameter> parameters;
+    private final Parameter parameters;
     private final Map<String, CommandCallable> children;
-    private final ChildExceptionBehavior behavior;
+    private final ChildExceptionBehavior childExceptionBehavior;
     private final InputTokenizer inputTokenizer;
-    @Nullable private final Flags flags;
+    private final Flags flags;
+    private final CommandExecutor executor;
     @Nullable private final String permission;
     @Nullable private final Text shortDescription;
     @Nullable private final Text extendedDescription;
     private final boolean requirePermissionForChildren;
 
     SpongeCommandSpecification(Iterable<Parameter> parameters,
-                               Map<String, CommandCallable> children,
-                               ChildExceptionBehavior behavior,
-                               InputTokenizer inputTokenizer,
-                               @Nullable Flags flags,
-                               @Nullable String permission,
-                               @Nullable Text shortDescription,
-                               @Nullable Text extendedDescription,
-                               boolean requirePermissionForChildren) {
-        this.parameters = parameters;
+            Map<String, CommandCallable> children,
+            ChildExceptionBehavior childExceptionBehavior,
+            InputTokenizer inputTokenizer,
+            Flags flags,
+            CommandExecutor executor, @Nullable String permission,
+            @Nullable Text shortDescription,
+            @Nullable Text extendedDescription,
+            boolean requirePermissionForChildren) {
+        this.parameters = Parameter.seq(parameters);
         this.children = children;
-        this.behavior = behavior;
+        this.childExceptionBehavior = childExceptionBehavior;
         this.inputTokenizer = inputTokenizer;
         this.flags = flags;
+        this.executor = executor;
         this.permission = permission;
         this.shortDescription = shortDescription;
         this.extendedDescription = extendedDescription;
@@ -97,13 +110,17 @@ public class SpongeCommandSpecification implements CommandSpecification {
             checkPermission(source);
         }
 
+        populateContext(source, args, context);
         return null;
     }
 
     @Override
     public List<String> getSuggestions(CommandSource source, String arguments, @Nullable Location<World> targetPosition)
             throws CommandException {
-        return null;
+        checkNotNull(source, "source");
+        SpongeTokenizedArgs args = new SpongeTokenizedArgs(this.inputTokenizer.tokenize(arguments, true), arguments);
+        CommandExecutionContext context = new SpongeCommandExecutionContext(null, true, targetPosition);
+        return ImmutableList.copyOf(this.parameters.complete(source, args, context));
     }
 
     @Override
@@ -117,19 +134,48 @@ public class SpongeCommandSpecification implements CommandSpecification {
     }
 
     @Override
+    public Optional<Text> getExtendedDescription(CommandSource source) {
+        return Optional.ofNullable(this.extendedDescription);
+    }
+
+    @Override
     public Optional<Text> getHelp(CommandSource source) {
-        return null;
+        // TODO: This needs improving with subcommands etc.
+        checkNotNull(source, "source");
+        Text.Builder builder = Text.builder();
+        this.getShortDescription(source).ifPresent((a) -> builder.append(a, Text.NEW_LINE));
+        builder.append(getUsage(source));
+        this.getExtendedDescription(source).ifPresent((a) -> builder.append(Text.NEW_LINE, a));
+        return Optional.of(builder.build());
     }
 
     @Override
     public Text getUsage(CommandSource source) {
-        return null;
+        if (this.flags instanceof NoFlags) {
+            return this.parameters.getUsage(source);
+        }
+
+        return Text.joinWith(CommandMessageFormatting.SPACE_TEXT, this.flags.getUsage(source), this.parameters.getUsage(source));
     }
 
     private void checkPermission(CommandSource source) throws CommandPermissionException {
         if (!testPermission(source)) {
             throw new CommandPermissionException();
         }
+    }
+
+    /**
+     * Process this command with existing arguments and context objects.
+     *
+     * @param source The source to populate the context with
+     * @param args The arguments to process with
+     * @param context The context to put data in
+     * @throws ParameterParseException if an invalid argument is provided
+     */
+    private void populateContext(CommandSource source, TokenizedArgs args, CommandExecutionContext context) throws ParameterParseException {
+        // First, the flags.
+        this.flags.parse(source, args, context);
+        this.parameters.parse(source, args, context);
     }
 
 }

@@ -27,12 +27,15 @@ package org.spongepowered.common.command.specification;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
+import org.spongepowered.api.command.parameters.flags.Flags;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.TranslatableText;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 import org.spongepowered.api.command.parameters.CommandExecutionContext;
+import org.spongepowered.common.command.parameters.flags.NoFlags;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
@@ -47,6 +50,7 @@ public class SpongeCommandExecutionContext implements CommandExecutionContext {
     private final UUID internalIdentifier = UUID.randomUUID();
     private final boolean isCompletion;
     @Nullable private final Location<World> targetBlock;
+    private Flags flags = NoFlags.INSTANCE;
 
     private static String textToArgKey(Text key) {
         if (key instanceof TranslatableText) { // Use translation key
@@ -59,17 +63,22 @@ public class SpongeCommandExecutionContext implements CommandExecutionContext {
     private final ArrayListMultimap<String, Object> parsedArgs;
 
     public SpongeCommandExecutionContext() {
-        this(ArrayListMultimap.create(), false, null);
+        this(null, false, null);
     }
 
-    public SpongeCommandExecutionContext(ArrayListMultimap<String, Object> parsedArgs) {
-        this(parsedArgs, false, null);
-    }
-
-    public SpongeCommandExecutionContext(ArrayListMultimap<String, Object> parsedArgs, boolean isCompletion, @Nullable Location<World> targetBlock) {
+    public SpongeCommandExecutionContext(@Nullable ArrayListMultimap<String, Object> parsedArgs, boolean isCompletion,
+            @Nullable Location<World> targetBlock) {
         this.targetBlock = targetBlock;
         this.isCompletion = isCompletion;
-        this.parsedArgs = parsedArgs;
+        this.parsedArgs = parsedArgs == null ? ArrayListMultimap.create() : parsedArgs;
+    }
+
+    public void setFlags(Flags flags) {
+        this.flags = flags;
+    }
+
+    public Flags getFlags() {
+        return this.flags;
     }
 
     @Override

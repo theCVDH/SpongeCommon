@@ -30,6 +30,7 @@ import org.spongepowered.api.command.parameters.CommandExecutionContext;
 import org.spongepowered.api.command.parameters.Parameter;
 import org.spongepowered.api.command.parameters.ParameterParseException;
 import org.spongepowered.api.command.parameters.tokens.TokenizedArgs;
+import org.spongepowered.common.command.specification.SpongeCommandExecutionContext;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -38,10 +39,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class SpongeSequenceParameter implements Parameter {
-
-    private static final Text OPEN = Text.of("(");
-    private static final Text SEPERATOR = Text.of("|");
-    private static final Text CLOSE = Text.of(")");
 
     private final List<Parameter> parameters;
 
@@ -60,8 +57,12 @@ public class SpongeSequenceParameter implements Parameter {
 
     @Override
     public void parse(CommandSource source, TokenizedArgs args, CommandExecutionContext context) throws ParameterParseException {
+        boolean parseFlags = context instanceof SpongeCommandExecutionContext && !((SpongeCommandExecutionContext) context).getFlags().isAnchored();
         for (Parameter parameter : this.parameters) {
             parameter.parse(source, args, context);
+            if (parseFlags) {
+                ((SpongeCommandExecutionContext) context).getFlags().parse(source, args, context);
+            }
         }
     }
 

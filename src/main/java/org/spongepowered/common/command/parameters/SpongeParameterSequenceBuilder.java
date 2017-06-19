@@ -25,7 +25,9 @@
 package org.spongepowered.common.command.parameters;
 
 import com.google.common.base.Preconditions;
+import org.spongepowered.api.command.CommandMessageFormatting;
 import org.spongepowered.api.command.CommandSource;
+import org.spongepowered.api.command.parameters.flags.Flags;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.command.parameters.CommandExecutionContext;
 import org.spongepowered.api.command.parameters.Parameter;
@@ -34,10 +36,11 @@ import org.spongepowered.api.command.parameters.tokens.TokenizedArgs;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 
 import static org.spongepowered.api.util.SpongeApiTranslationHelper.t;
+
+import javax.annotation.Nullable;
 
 public class SpongeParameterSequenceBuilder implements Parameter.SequenceBuilder {
 
@@ -52,8 +55,10 @@ public class SpongeParameterSequenceBuilder implements Parameter.SequenceBuilder
     }
 
     @Override
-    public Parameter.SequenceBuilder add(Collection<Parameter> parameters) {
-        this.parameters.addAll(parameters);
+    public Parameter.SequenceBuilder add(Iterable<Parameter> parameters) {
+        for (Parameter parameter : parameters) {
+            this.parameters.add(parameter);
+        }
         return this;
     }
 
@@ -90,10 +95,6 @@ public class SpongeParameterSequenceBuilder implements Parameter.SequenceBuilder
     }
 
     private static class SpongeFirstOfParameter implements Parameter {
-
-        private static final Text OPEN = Text.of("(");
-        private static final Text SEPERATOR = Text.of("|");
-        private static final Text CLOSE = Text.of(")");
 
         private final List<Parameter> parameters;
 
@@ -141,7 +142,7 @@ public class SpongeParameterSequenceBuilder implements Parameter.SequenceBuilder
 
         @Override
         public Text getUsage(CommandSource source) {
-            Text.Builder builder = OPEN.toBuilder();
+            Text.Builder builder = CommandMessageFormatting.LEFT_PARENTHESIS.toBuilder();
             boolean isFirst = true;
 
             for (Parameter parameter : this.parameters) {
@@ -150,12 +151,12 @@ public class SpongeParameterSequenceBuilder implements Parameter.SequenceBuilder
                     if (isFirst) {
                         isFirst = false;
                     } else {
-                        builder.append(SEPERATOR);
+                        builder.append(CommandMessageFormatting.PIPE_TEXT);
                     }
                     builder.append(usage);
                 }
             }
-            return builder.append(CLOSE).build();
+            return builder.append(CommandMessageFormatting.RIGHT_PARENTHESIS).build();
         }
     }
 

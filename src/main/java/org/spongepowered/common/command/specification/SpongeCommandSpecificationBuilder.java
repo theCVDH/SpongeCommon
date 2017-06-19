@@ -24,11 +24,14 @@
  */
 package org.spongepowered.common.command.specification;
 
+import static org.spongepowered.common.util.SpongeCommonTranslationHelper.t;
+
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import org.spongepowered.api.command.CommandCallable;
+import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.parameters.tokens.InputTokenizer;
 import org.spongepowered.api.command.parameters.tokens.InputTokenizers;
 import org.spongepowered.api.command.specification.ChildExceptionBehavior;
@@ -38,6 +41,7 @@ import org.spongepowered.api.command.specification.CommandSpecification;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.command.parameters.Parameter;
 import org.spongepowered.api.command.parameters.flags.Flags;
+import org.spongepowered.common.command.parameters.flags.NoFlags;
 
 import javax.annotation.Nullable;
 import java.util.Arrays;
@@ -45,6 +49,10 @@ import java.util.Locale;
 import java.util.Map;
 
 public class SpongeCommandSpecificationBuilder implements CommandSpecification.Builder {
+
+    private static final CommandExecutor SUBCOMMAND_ONLY_EXECUTOR = (s, c) -> {
+        throw new CommandException(t("This command requires a subcommand."));
+    };
 
     private Iterable<Parameter> parameters = ImmutableList.of();
     private final Map<String, CommandCallable> children = Maps.newHashMap();
@@ -150,7 +158,8 @@ public class SpongeCommandSpecificationBuilder implements CommandSpecification.B
                 this.children,
                 this.behavior,
                 this.inputTokenizer,
-                this.flags,
+                this.flags == null ? NoFlags.INSTANCE : this.flags,
+                this.executor == null ? SUBCOMMAND_ONLY_EXECUTOR : this.executor,
                 this.permission,
                 this.shortDescription,
                 this.extendedDescription,
@@ -160,6 +169,10 @@ public class SpongeCommandSpecificationBuilder implements CommandSpecification.B
 
     @Override
     public CommandSpecification.Builder from(CommandSpecification value) {
+        if (!(value instanceof SpongeCommandSpecification)) {
+            throw new IllegalArgumentException("value must be a SpongeCommandSpecification");
+        }
+
         // TODO
         return this;
     }

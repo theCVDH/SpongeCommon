@@ -33,7 +33,6 @@ import org.spongepowered.api.command.parameters.Parameter;
 import org.spongepowered.api.command.parameters.flags.Flags;
 import org.spongepowered.api.command.parameters.flags.UnknownFlagBehavior;
 import org.spongepowered.api.command.parameters.tokens.TokenizedArgs;
-import org.spongepowered.common.util.TextsJoiningCollector;
 
 import java.util.List;
 import java.util.Locale;
@@ -98,8 +97,15 @@ public class SpongeFlags implements Flags {
 
     @Override
     public Text getUsage(CommandSource src) {
-        return this.primaryFlags.stream().map(this.flags::get).map(x -> x.getUsage(src)).filter(x -> !x.isEmpty())
-                .collect(new TextsJoiningCollector(CommandMessageFormatting.SPACE_TEXT));
+        return Text.joinWith(CommandMessageFormatting.SPACE_TEXT, this.primaryFlags
+                .stream().map(this.flags::get).map(x -> x.getUsage(src)).filter
+                (x -> !x.isEmpty())
+                .collect(Collectors.toList()));
+    }
+
+    @Override
+    public boolean isAnchored() {
+        return this.anchorFlags;
     }
 
     void populateBuilder(SpongeFlagsBuilder builder) {
@@ -108,4 +114,5 @@ public class SpongeFlags implements Flags {
                 .setUnknownLongFlagBehavior(this.longUnknown)
                 .setAnchorFlags(this.anchorFlags);
     }
+
 }
