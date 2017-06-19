@@ -40,7 +40,6 @@ import net.minecraft.crash.CrashReportCategory;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.MultiPartEntityPart;
 import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.boss.EntityDragonPart;
 import net.minecraft.entity.effect.EntityLightningBolt;
 import net.minecraft.entity.item.EntityArmorStand;
 import net.minecraft.entity.item.EntityEnderPearl;
