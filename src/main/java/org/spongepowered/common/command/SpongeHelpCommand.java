@@ -24,24 +24,22 @@
  */
 package org.spongepowered.common.command;
 
-import static org.spongepowered.api.command.args.GenericArguments.optional;
-import static org.spongepowered.api.command.args.GenericArguments.string;
-
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
+import org.spongepowered.api.command.Command;
+import org.spongepowered.api.command.CommandException;
+import org.spongepowered.api.command.CommandMapping;
+import org.spongepowered.api.command.CommandSource;
+import org.spongepowered.api.command.parameters.Parameter;
+import org.spongepowered.api.command.specification.CommandSpecification;
 import org.spongepowered.api.service.pagination.PaginationList;
 import org.spongepowered.api.service.pagination.PaginationService;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.action.TextActions;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.text.format.TextStyles;
-import org.spongepowered.api.command.CommandCallable;
-import org.spongepowered.api.command.CommandException;
-import org.spongepowered.api.command.CommandMapping;
-import org.spongepowered.api.command.CommandResult;
-import org.spongepowered.api.command.CommandSource;
-import org.spongepowered.api.command.spec.CommandSpec;
 import org.spongepowered.common.SpongeImpl;
+import org.spongepowered.common.command.result.SpongeResult;
 
 import java.util.Comparator;
 import java.util.Optional;
@@ -49,12 +47,12 @@ import java.util.TreeSet;
 
 public class SpongeHelpCommand {
 
-    private static final Comparator<CommandMapping> COMMAND_COMPARATOR = (o1, o2) -> o1.getPrimaryAlias().compareTo(o2.getPrimaryAlias());
+    private static final Comparator<CommandMapping> COMMAND_COMPARATOR = Comparator.comparing(CommandMapping::getPrimaryAlias);
 
-    public static CommandSpec create() {
-        return CommandSpec
+    public static CommandSpecification create() {
+        return CommandSpecification
             .builder()
-            .arguments(optional(string(Text.of("command"))))
+            .parameters(Parameter.builder().key("command").optional().string().build())
             .description(Text.of("View a list of all commands."))
             .extendedDescription(
                 Text.of("View a list of all commands. Hover over\n" + " a command to view its description. Click\n"
@@ -64,14 +62,14 @@ public class SpongeHelpCommand {
                 if (command.isPresent()) {
                     Optional<? extends CommandMapping> mapping = SpongeImpl.getGame().getCommandManager().get(command.get(), src);
                     if (mapping.isPresent()) {
-                        CommandCallable callable = mapping.get().getCallable();
+                        Command callable = mapping.get().getCallable();
                         Optional<? extends Text> desc = callable.getHelp(src);
                         if (desc.isPresent()) {
                             src.sendMessage(desc.get());
                         } else {
                             src.sendMessage(Text.of("Usage: /", command.get(), callable.getUsage(src)));
                         }
-                        return CommandResult.success();
+                        return SpongeResult.SUCCESS;
                     }
                     throw new CommandException(Text.of("No such command: ", command.get()));
                 }
@@ -85,7 +83,7 @@ public class SpongeHelpCommand {
                     .testPermission(src)));
                 builder.contents(ImmutableList.copyOf(Collections2.transform(commands, input -> getDescription(src, input))));
                 builder.sendTo(src);
-                return CommandResult.success();
+                return SpongeResult.SUCCESS;
             }).build();
     }
 

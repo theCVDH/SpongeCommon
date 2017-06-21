@@ -30,6 +30,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+import org.spongepowered.api.command.Command;
 import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.parameters.tokens.InputTokenizer;
@@ -55,7 +56,7 @@ public class SpongeCommandSpecificationBuilder implements CommandSpecification.B
     };
 
     private Iterable<Parameter> parameters = ImmutableList.of();
-    private final Map<String, CommandCallable> children = Maps.newHashMap();
+    private final Map<String, Command> children = Maps.newHashMap();
     private ChildExceptionBehavior behavior = ChildExceptionBehaviors.RETHROW;
     private InputTokenizer inputTokenizer = InputTokenizers.LENIENT_QUOTED_STRING;
     @Nullable private CommandExecutor executor = null;
@@ -66,18 +67,18 @@ public class SpongeCommandSpecificationBuilder implements CommandSpecification.B
     private boolean requirePermissionForChildren = true;
 
     @Override
-    public CommandSpecification.Builder addChild(CommandCallable child, String... keys) {
+    public CommandSpecification.Builder addChild(Command child, String... keys) {
         return addChild(child, Arrays.asList(keys));
     }
 
     @Override
-    public CommandSpecification.Builder addChild(CommandCallable child, Iterable<String> keys) {
+    public CommandSpecification.Builder addChild(Command child, Iterable<String> keys) {
         return addChildren(ImmutableMap.of(keys, child));
     }
 
     @Override
-    public CommandSpecification.Builder addChildren(Map<? extends Iterable<String>, CommandCallable> children) {
-        Map<String, CommandCallable> stage = Maps.newHashMap();
+    public CommandSpecification.Builder addChildren(Map<? extends Iterable<String>, Command> children) {
+        Map<String, Command> stage = Maps.newHashMap();
         children.forEach((key, value) ->
                 key.forEach(x -> Preconditions.checkArgument(stage.put(x.toLowerCase(Locale.ENGLISH), value) == null,
                 "No two children can have the same key. Keys are case insensitive.")));
@@ -102,7 +103,7 @@ public class SpongeCommandSpecificationBuilder implements CommandSpecification.B
     }
 
     @Override
-    public CommandSpecification.Builder simpleDescription(@Nullable Text description) {
+    public CommandSpecification.Builder description(@Nullable Text description) {
         this.shortDescription = description;
         return this;
     }

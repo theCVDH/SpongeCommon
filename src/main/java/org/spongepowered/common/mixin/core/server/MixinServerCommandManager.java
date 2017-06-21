@@ -34,6 +34,7 @@ import net.minecraft.util.math.BlockPos;
 import org.spongepowered.api.Game;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
+import org.spongepowered.api.command.Result;
 import org.spongepowered.api.service.permission.PermissionService;
 import org.spongepowered.api.service.permission.SubjectData;
 import org.spongepowered.api.util.Tristate;
@@ -52,6 +53,7 @@ import javax.annotation.Nullable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.OptionalInt;
 
 @NonnullByDefault
 @Mixin(ServerCommandManager.class)
@@ -60,9 +62,9 @@ public abstract class MixinServerCommandManager extends CommandHandler implement
     private List<MinecraftCommandWrapper> lowPriorityCommands = Lists.newArrayList();
     private List<MinecraftCommandWrapper> earlyRegisterCommands = Lists.newArrayList();
 
-    private void updateStat(ICommandSender sender, CommandResultStats.Type type, Optional<Integer> count) {
+    private void updateStat(ICommandSender sender, CommandResultStats.Type type, OptionalInt count) {
         if (count.isPresent()) {
-            sender.setCommandStat(type, count.get());
+            sender.setCommandStat(type, count.getAsInt());
         }
     }
 
@@ -80,13 +82,13 @@ public abstract class MixinServerCommandManager extends CommandHandler implement
         }
 
         CommandSource source = WrapperCommandSource.of(sender);
-        CommandResult result = SpongeImpl.getGame().getCommandManager().process(source, command);
-        updateStat(sender, CommandResultStats.Type.AFFECTED_BLOCKS, result.getAffectedBlocks());
-        updateStat(sender, CommandResultStats.Type.AFFECTED_ENTITIES, result.getAffectedEntities());
-        updateStat(sender, CommandResultStats.Type.AFFECTED_ITEMS, result.getAffectedItems());
-        updateStat(sender, CommandResultStats.Type.QUERY_RESULT, result.getQueryResult());
-        updateStat(sender, CommandResultStats.Type.SUCCESS_COUNT, result.getSuccessCount());
-        return result.getSuccessCount().orElse(0);
+        Result result = SpongeImpl.getGame().getCommandManager().process(source, command);
+        updateStat(sender, CommandResultStats.Type.AFFECTED_BLOCKS, result.affectedBlocks());
+        updateStat(sender, CommandResultStats.Type.AFFECTED_ENTITIES, result.affectedEntities());
+        updateStat(sender, CommandResultStats.Type.AFFECTED_ITEMS, result.affectedEntities());
+        updateStat(sender, CommandResultStats.Type.QUERY_RESULT, result.queryResult());
+        updateStat(sender, CommandResultStats.Type.SUCCESS_COUNT, result.successCount());
+        return result.successCount().orElse(0);
 
         //return super.executeCommand(sender, command); // Try Vanilla instead
     }

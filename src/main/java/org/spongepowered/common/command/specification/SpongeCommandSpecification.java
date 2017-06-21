@@ -28,6 +28,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static org.spongepowered.api.util.SpongeApiTranslationHelper.t;
 
 import com.google.common.collect.ImmutableList;
+import org.spongepowered.api.command.Command;
 import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandMessageFormatting;
@@ -60,7 +61,7 @@ import java.util.Optional;
 public class SpongeCommandSpecification implements CommandSpecification {
 
     private final Parameter parameters;
-    private final Map<String, CommandCallable> children;
+    private final Map<String, Command> children;
     private final ChildExceptionBehavior childExceptionBehavior;
     private final InputTokenizer inputTokenizer;
     private final Flags flags;
@@ -71,7 +72,7 @@ public class SpongeCommandSpecification implements CommandSpecification {
     private final boolean requirePermissionForChildren;
 
     SpongeCommandSpecification(Iterable<Parameter> parameters,
-            Map<String, CommandCallable> children,
+            Map<String, Command> children,
             ChildExceptionBehavior childExceptionBehavior,
             InputTokenizer inputTokenizer,
             Flags flags,
