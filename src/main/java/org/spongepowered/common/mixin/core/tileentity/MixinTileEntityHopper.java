@@ -29,8 +29,10 @@ import static org.spongepowered.api.data.DataQuery.of;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
+import net.minecraft.tileentity.IHopper;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityHopper;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import org.spongepowered.api.block.tileentity.carrier.Hopper;
 import org.spongepowered.api.data.DataContainer;
@@ -38,6 +40,7 @@ import org.spongepowered.api.data.manipulator.DataManipulator;
 import org.spongepowered.api.data.manipulator.mutable.tileentity.CooldownData;
 import org.spongepowered.api.util.annotation.NonnullByDefault;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -90,6 +93,46 @@ public abstract class MixinTileEntityHopper extends MixinTileEntityLockableLoot 
     public DataContainer toContainer() {
         DataContainer container = super.toContainer();
         return container.set(of("TransferCooldown"), this.transferCooldown);
+    }
+
+    // TODO do we want to use overwrites here?
+
+    @Overwrite
+    private boolean transferItemsOut() {
+        // TODO after putStackInInventoryAllSlots
+        // get slot
+        // itemstack is before, after one less
+        // Build SlotTransaction and add it to a list for the event later
+        // Additionally we need the slottransaction in the remote inventory
+        return false;
+    }
+
+    @Overwrite
+    private static boolean pullItemFromSlot(IHopper hopper, IInventory inventoryIn, int index, EnumFacing direction) {
+        // TODO after putStackInInventoryAllSlots
+        // get slot
+        // itemstack1 is before, after one less
+        // Build SlotTransaction and add it to a list for the event later
+        // Additionally we need the slottransaction in the remote inventory
+        return false;
+    }
+
+    @Overwrite
+    public static boolean putDropInInventoryAllSlots(IInventory source, IInventory destination, EntityItem entity) {
+        // TODO after putStackInInventoryAllSlots
+        // entity?
+        // Additionally we need the slottransaction in the remote inventory
+        return false;
+    }
+
+    @Overwrite
+    private static ItemStack insertStack(IInventory source, IInventory destination, ItemStack stack, int index, EnumFacing direction) {
+        // called in putDropInInventoryAllSlots
+        // putDropInInventoryAllSlots is also called from BlockDropper!
+        // TODO capture slot and itemstack before start after end
+        // add slottransactions
+
+        return null;
     }
 
     @Override
